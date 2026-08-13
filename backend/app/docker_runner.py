@@ -4,7 +4,7 @@ import os
 client = docker.from_env()
 
 def run_in_docker(image, repo_url, steps, log_callback):
-    commands = [f"git clone {repo_url} ."] + steps
+    commands = [f"apt-get update && apt-get install -y git && git clone {repo_url} ."] + steps
     joined_cmd = " && ".join(commands)
     # Using sh to evaluate the combined command string
     sh_cmd = f"sh -c '{joined_cmd}'"

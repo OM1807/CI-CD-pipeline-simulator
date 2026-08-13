@@ -21,3 +21,12 @@ export const submitBuild = async (payload) => {
   if (!res.ok) throw new Error("Failed to submit build");
   return res.json();
 };
+
+export const getMetrics = async () => {
+    // Assuming API_BASE_URL is defined in this file, e.g., const API_BASE_URL = 'http://localhost:8000';
+    const response = await fetch(`${API_URL}/metrics`);
+    if (!response.ok) {
+        throw new Error('Failed to fetch metrics');
+    }
+    return response.json();
+};

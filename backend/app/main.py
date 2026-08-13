@@ -67,3 +67,27 @@ def get_build(build_id: str, db: Session = Depends(get_db)):
     if not build:
         raise HTTPException(status_code=404, detail="Build not found")
     return prepare_build_response(build)
+
+@app.get("/metrics")
+def get_metrics(db: Session = Depends(get_db)):
+    # Calculate Queue Depth
+    queue_depth = len(job_queue)
+    
+    # Calculate Success Rate (Checking for both 'success' and 'passed')
+    total_completed = db.query(models.Build).filter(
+        models.Build.status.in_(["success", "passed", "failed"])
+    ).count()
+    
+    successful_builds = db.query(models.Build).filter(
+        models.Build.status.in_(["success", "passed"])
+    ).count()
+    
+    success_rate = 0
+    if total_completed > 0:
+        success_rate = round((successful_builds / total_completed) * 100, 2)
+        
+    return {
+        "queue_depth": queue_depth,
+        "success_rate": success_rate,
+        "total_completed": total_completed
+    }
