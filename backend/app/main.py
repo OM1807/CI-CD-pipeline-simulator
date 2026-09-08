@@ -36,24 +36,37 @@ def prepare_build_response(build: models.Build) -> dict:
         resp["duration_seconds"] = None
     return resp
 
-@app.post("/builds", response_model=schemas.BuildResponse, status_code=201)
-def create_build(build_req: schemas.BuildCreate, db: Session = Depends(get_db)):
+@app.post(
+    "/builds",
+    response_model=schemas.BuildResponse,
+    status_code=201
+)
+def create_build(
+    build_req: schemas.BuildCreate,
+    db: Session = Depends(get_db),
+):
     build_id = f"b_{uuid.uuid4().hex[:8]}"
-    
+
     new_build = models.Build(
         id=build_id,
-        repo_url=build_req.repo_url,
-        branch=build_req.branch,
-        steps=build_req.steps,
-        image=build_req.image,
+        repo_url=build_req.repo_url.strip(),
+        branch=(build_req.branch or "main").strip(),
+
+        # Empty list means automatic pipeline detection.
+        steps=build_req.steps or [],
+
+        image=build_req.image or "python:3.11-slim",
     )
+
     db.add(new_build)
     db.commit()
     db.refresh(new_build)
-    
-    # Enqueue job
-    job_queue.enqueue("app.worker.run_build", build_id)
-    
+
+    job_queue.enqueue(
+        "app.worker.run_build",
+        build_id,
+    )
+
     return prepare_build_response(new_build)
 
 @app.get("/builds", response_model=List[schemas.BuildResponse])

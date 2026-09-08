@@ -2,11 +2,23 @@ from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
 
+
 class BuildCreate(BaseModel):
     repo_url: str
+
     branch: Optional[str] = "main"
-    steps: List[str]
+
+    # Optional.
+    #
+    # If provided:
+    #     execute these explicit commands.
+    #
+    # If omitted:
+    #     automatically detect build/test pipeline.
+    steps: Optional[List[str]] = None
+
     image: Optional[str] = "python:3.11-slim"
+
 
 class BuildResponse(BaseModel):
     id: str
